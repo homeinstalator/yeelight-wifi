@@ -65,7 +65,7 @@ var Yeelight = function (_EventEmitter) {
   function Yeelight(data) {
     _classCallCheck(this, Yeelight);
 
-    var _this2 = _possibleConstructorReturn(this, (Yeelight.__proto__ || Object.getPrototypeOf(Yeelight)).call(this));
+    var _this = _possibleConstructorReturn(this, (Yeelight.__proto__ || Object.getPrototypeOf(Yeelight)).call(this));
 
     if (typeof data === 'undefined' || (typeof data === 'undefined' ? 'undefined' : _typeof(data)) !== 'object') {
       throw new Error('options are needed');
@@ -76,47 +76,47 @@ var Yeelight = function (_EventEmitter) {
       throw new Error(parsedUri.protocol + ' is not supported');
     }
 
-    _this2.config = { refresh: 3 * 60 };
+    _this.config = { refresh: 3 * 60 };
 
-    _this2.id = data.ID;
-    _this2.name = data.NAME;
-    _this2.model = data.MODEL;
-    _this2.port = parsedUri.port;
-    _this2.hostname = parsedUri.hostname;
-    _this2.supports = data.SUPPORT.split(' ');
-    _this2.status = YeelightStatus.SSDP;
-    _this2.lastKnown = Date.now();
+    _this.id = data.ID;
+    _this.name = data.NAME;
+    _this.model = data.MODEL;
+    _this.port = parsedUri.port;
+    _this.hostname = parsedUri.hostname;
+    _this.supports = data.SUPPORT.split(' ');
+    _this.status = YeelightStatus.SSDP;
+    _this.lastKnown = Date.now();
 
-    _this2.reqCount = 1;
-    _this2.log = (0, _debug2.default)('Yeelight-' + _this2.name);
+    _this.reqCount = 1;
+    _this.log = (0, _debug2.default)('Yeelight-' + _this.name);
 
-    _this2.socket = new _net2.default.Socket();
-    _this2.socket.setKeepAlive(true);
-    _this2.socket.setTimeout(_this2.config.refresh * 1000);
+    _this.socket = new _net2.default.Socket();
+    _this.socket.setKeepAlive(true);
+    _this.socket.setTimeout(_this.config.refresh * 1000);
 
-    _this2.socket.on('data', _this2.formatResponse.bind(_this2));
+    _this.socket.on('data', _this.formatResponse.bind(_this));
 
-    _this2.socket.on('close', function () {
-      _this2.log('closed connection to ' + _this2.name + ' id ' + _this2.id + ' on ' + _this2.hostname + ':' + _this2.port);
-      _this2.status = YeelightStatus.OFFLINE;
+    _this.socket.on('close', function () {
+      _this.log('closed connection to ' + _this.name + ' id ' + _this.id + ' on ' + _this.hostname + ':' + _this.port);
+      _this.status = YeelightStatus.OFFLINE;
     });
 
-    _this2.socket.on('timeout', _this2.refresh.bind(_this2));
+    _this.socket.on('timeout', _this.refresh.bind(_this));
 
-    _this2.socket.on('error', function (err) {
+    _this.socket.on('error', function (err) {
       if (err.code == 'ECONNRESET') {
-        _this2.log('Connection reset on id ' + _this2.id + ' ' + _this2.hostname + ':' + _this2.port + ' connection');
-        _this2.status = YeelightStatus.OFFLINE;
-        _this2.socket.connect(_this2.port, _this2.hostname, _this2.connect());
+        _this.log('Connection reset on id ' + _this.id + ' ' + _this.hostname + ':' + _this.port + ' connection');
+        _this.status = YeelightStatus.OFFLINE;
+        _this.socket.connect(_this.port, _this.hostname, _this.connect());
       } else if (err.code == 'ECONNREFUSED') {
-        _this2.status = YeelightStatus.OFFLINE;
-        _this2.log('Connection refused on id ' + _this2.id + ' ' + _this2.hostname + ':' + _this2.port + ' connection');
+        _this.status = YeelightStatus.OFFLINE;
+        _this.log('Connection refused on id ' + _this.id + ' ' + _this.hostname + ':' + _this.port + ' connection');
       }
-      _this2.emit('error', _this.id, 'Connection ' + _this.hostname + ':' + _this.port, err);
+      _this.emit('error', _this.id, 'Connection ' + _this.hostname + ':' + _this.port, err);
     });
 
-    _this2.socket.connect(_this2.port, _this2.hostname, _this2.connect());
-    return _this2;
+    _this.socket.connect(_this.port, _this.hostname, _this.connect());
+    return _this;
   }
 
   /**
@@ -181,14 +181,14 @@ var Yeelight = function (_EventEmitter) {
   }, {
     key: 'sendRequest',
     value: function sendRequest(method, params, schema) {
-      var _this3 = this;
+      var _this2 = this;
 
       return new Promise(function (resolve, reject) {
         if (!schema) {
           schema = _joi2.default.any(); //eslint-disable-line
         }
 
-        if (!_this3.supports.includes(method)) {
+        if (!_this2.supports.includes(method)) {
           reject(new Error('unsupported method: ' + method));
           return;
         }
@@ -202,24 +202,24 @@ var Yeelight = function (_EventEmitter) {
           var req = JSON.stringify({
             method: method,
             params: value,
-            id: _this3.reqCount
+            id: _this2.reqCount
           });
 
           // Avoid to send data on stale sockets
-          if (_this3.status > YeelightStatus.OFFLINE) {
-            _this3.log('sending req: ' + req);
+          if (_this2.status > YeelightStatus.OFFLINE) {
+            _this2.log('sending req: ' + req);
 
-            _this3.socket.write(req + '\r\n', function (err) {
+            _this2.socket.write(req + '\r\n', function (err) {
               if (err) {
-                _this3.log('Error sending req: ' + req + ' on ' + err.address);
+                _this2.log('Error sending req: ' + req + ' on ' + err.address);
                 reject(err);
                 return;
               }
-              resolve(_this3.reqCount);
-              _this3.reqCount += 1;
+              resolve(_this2.reqCount);
+              _this2.reqCount += 1;
             });
           } else {
-            _this3.log('Not sending request for offline bulb');
+            _this2.log('Not sending request for offline bulb');
             resolve();
           }
         });
