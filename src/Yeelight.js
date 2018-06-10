@@ -74,8 +74,8 @@ export default class Yeelight extends EventEmitter {
       } else if (err.code == 'ECONNREFUSED' ) {
         this.status = YeelightStatus.OFFLINE;
         this.log(`Connection refused on id ${this.id} ${this.hostname}:${this.port} connection`);
-        this.emit('error', this.id, `Connection refused on ${this.hostname}:${this.port}`, err);
       }
+		this.emit('error', _this.id, 'Connection ' + _this.hostname + ':' + _this.port, err);
 	   });
 
     this.socket.connect(this.port, this.hostname, this.connect());
