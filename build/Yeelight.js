@@ -356,6 +356,18 @@ var Yeelight = function (_EventEmitter) {
     value: function setDefaultState() {
       return this.sendRequest('set_default', []);
     }
+    /**
+     * This method is used to save current state of smart LED in persistent memory.
+     * So if user powers off and then powers on the smart LED again (hard power reset),
+     * the smart LED will show last saved state.
+     * @returns {Promise} will be invoked after successfull or failed send
+     */
+
+  }, {
+    key: 'setDefaultStateBg',
+    value: function setDefaultStateBg() {
+      return this.sendRequest('bg_set_default', []);
+    }
 
     /**
      * Will change the color temperature of the Yeelight
@@ -390,6 +402,38 @@ var Yeelight = function (_EventEmitter) {
     }
 
     /**
+     * Will change the color temperature of the Yeelight
+     * @param {string} temperature is the target color temperature. The type is integer and
+     * range is 1700 ~ 6500 (k).
+     *
+     * @param {string} [effect='smooth'] support two values: 'sudden' and 'smooth'. If effect is 'sudden',
+     * then the color temperature will be changed directly to target value, under this case, the
+     * third parameter 'duration' is ignored. If effect is 'smooth', then the color temperature will
+     * be changed to target value in a gradual fashion, under this case, the total time of gradual
+     * change is specified in third parameter "duration".
+     *
+     * @param {number} [time=1000] time specifies the total time of the gradual changing. The unit is
+     * milliseconds. The minimum support duration is 30 milliseconds.
+     *
+     * @example
+     * setColorTemperatureBg(5000);
+     * setColorTemperatureBg(5000, 'sudden');
+     * setColorTemperatureBg(5000, 'smooth', 1000);
+     *
+     * @returns {Promise} will be invoked after successfull or failed send
+     */
+
+  }, {
+    key: 'setColorTemperatureBg',
+    value: function setColorTemperatureBg(temperature) {
+      var effect = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 'smooth';
+      var time = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 1000;
+
+      var schema = _joi2.default.array().items(_joi2.default.number().min(1700).max(6500).required(), _joi2.default.string().allow('sudden', 'smooth').required(), _joi2.default.number().required());
+      return this.sendRequest('bg_set_ct_abx', [temperature, effect, time], schema);
+    }
+
+    /**
      * This method is used to change the brightness of a smart LED.
      * @param {string} brightness is the target brightness. The type is integer and ranges
      * from 1 to 100. The brightness is a percentage instead of a absolute value. 100 means
@@ -417,6 +461,33 @@ var Yeelight = function (_EventEmitter) {
     }
 
     /**
+     * This method is used to change the brightness of a smart LED.
+     * @param {string} brightness is the target brightness. The type is integer and ranges
+     * from 1 to 100. The brightness is a percentage instead of a absolute value. 100 means
+     * maximum brightness while 1 means the minimum brightness.
+     *
+     * @param {string} [effect='smooth']  Refer to 'setColorTemperature' method.
+     * @param {number} [time=1000] Refer to 'setColorTemperature' method.
+     *
+     * @example
+     * setBrightnessBg(25);
+     * setBrightnessBg(25, 'sudden');
+     * setBrightnessBg(25, 'smooth', 1000);
+     *
+     * @returns {Promise} will be invoked after successfull or failed send
+     */
+
+  }, {
+    key: 'setBrightnessBg',
+    value: function setBrightnessBg(brightness) {
+      var effect = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 'smooth';
+      var time = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 1000;
+
+      var schema = _joi2.default.array().items(_joi2.default.number().min(0).max(100).required(), _joi2.default.string().allow('sudden', 'smooth').required(), _joi2.default.number().required());
+      return this.sendRequest('bg_set_bright', [brightness, effect, time], schema);
+    }
+
+    /**
      * This method is used to switch on the smart LED (software managed on/off).
      * @param {string} [effect='smooth']  Refer to 'setColorTemperature' method.
      * @param {number} [time=1000] Refer to 'setColorTemperature' method.
@@ -437,6 +508,29 @@ var Yeelight = function (_EventEmitter) {
 
       var schema = _joi2.default.array().items(_joi2.default.any().required(), _joi2.default.string().allow('sudden', 'smooth').required(), _joi2.default.number().required());
       return this.sendRequest('set_power', ['on', effect, time], schema);
+    }
+
+    /**
+     * This method is used to switch on the smart LED (software managed on/off).
+     * @param {string} [effect='smooth']  Refer to 'setColorTemperature' method.
+     * @param {number} [time=1000] Refer to 'setColorTemperature' method.
+     *
+     * @example
+     * turnOnBg();
+     * turnOnBg('sudden');
+     * turnOnBg('smooth', 1000);
+     *
+     * @returns {Promise} will be invoked after successfull or failed send
+     */
+
+  }, {
+    key: 'turnOnBg',
+    value: function turnOnBg() {
+      var effect = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 'smooth';
+      var time = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 1000;
+
+      var schema = _joi2.default.array().items(_joi2.default.any().required(), _joi2.default.string().allow('sudden', 'smooth').required(), _joi2.default.number().required());
+      return this.sendRequest('bg_set_power', ['on', effect, time], schema);
     }
 
     /**
@@ -463,32 +557,152 @@ var Yeelight = function (_EventEmitter) {
     }
 
     /**
-     * This method is used to set the smart LED directly to specified state. If +
-     * the smart LED is off, then it will turn on the smart LED firstly and
-     * then apply the specified command.
-     * @param {array} params can be "color", "hsv", "ct", "cf", "auto_dealy_off".
-     * <br>"color" means change the smart LED to specified color and brightness.
-     * <br>"hsv" means change the smart LED to specified color and brightness"
-     * <br>"ct" means change the smart LED to specified ct and brightness.
-     * <br>"cf" means start a color flow in specified fashion.
-     * <br>c"auto_delay_off" means turn on the smart LED to specified
-     * brightness and start a sleep timer to turn off the light after the specified minutes.
-    "val1", "val2", "val3" are class specific.
+     * This method is used to switch off the smart LED (software managed on/off).
+     * @param {string} [effect='smooth']  Refer to 'setColorTemperature' method.
+     * @param {number} [time=1000] Refer to 'setColorTemperature' method.
      *
      * @example
-     * setScene(['color', 65280, 70]);
-     * setScene(['hsv', 300, 70, 100]);
-     * setScene(['ct', 5400, 100]);
-     * setScene(['cf', 0, 0, '500,1,255,100,1000,1,16776960,70']);
+     * turnOffBg();
+     * turnOffBg('sudden');
+     * turnOffBg('smooth', 1000);
      *
      * @returns {Promise} will be invoked after successfull or failed send
      */
+
+  }, {
+    key: 'turnOffBg',
+    value: function turnOffBg() {
+      var effect = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 'smooth';
+      var time = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 1000;
+
+      var schema = _joi2.default.array().items(_joi2.default.any().required(), _joi2.default.string().allow('sudden', 'smooth').required(), _joi2.default.number().required());
+      return this.sendRequest('bg_set_power', ['off', effect, time], schema);
+    }
+
+    /**
+     * This method is used to switch on the smart LED (software managed on/off).
+     * @param {string} [effect='smooth']  Refer to 'setColorTemperature' method.
+     * @param {number} [time=1000] Refer to 'setColorTemperature' method.
+     *
+     * @example
+     * moonMode();
+     * moonMode('sudden');
+     * moonMode('smooth', 1000);
+     *
+     * @returns {Promise} will be invoked after successfull or failed send
+     */
+
+  }, {
+    key: 'moonMode',
+    value: function moonMode() {
+      var effect = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 'smooth';
+      var time = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 1000;
+
+      var schema = _joi2.default.array().items(_joi2.default.any().required(), _joi2.default.string().allow('sudden', 'smooth').required(), _joi2.default.number().required());
+      return this.sendRequest('set_power', ['on', effect, time, 5], schema);
+    }
+    /**
+     * This method is used to switch on the smart LED (software managed on/off).
+     * @param {string} [effect='smooth']  Refer to 'setColorTemperature' method.
+     * @param {number} [time=1000] Refer to 'setColorTemperature' method.
+     *
+     * @example
+     * defaultMode();
+     * defaultMode('sudden');
+     * defaultMode('smooth', 1000);
+     *
+     * @returns {Promise} will be invoked after successfull or failed send
+     */
+
+  }, {
+    key: 'defaultMode',
+    value: function defaultMode() {
+      var effect = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 'smooth';
+      var time = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 1000;
+
+      var schema = _joi2.default.array().items(_joi2.default.any().required(), _joi2.default.string().allow('sudden', 'smooth').required(), _joi2.default.number().required());
+      return this.sendRequest('set_power', ['on', effect, time, 1], schema);
+    }
+
+    /**
+     * This method is used to switch on the smart LED (software managed on/off).
+     * @param {string} [effect='smooth']  Refer to 'setColorTemperature' method.
+     * @param {number} [time=1000] Refer to 'setColorTemperature' method.
+     *
+     * @example
+     * colorMode();
+     * colorMode('sudden');
+     * colorMode('smooth', 1000);
+     *
+     * @returns {Promise} will be invoked after successfull or failed send
+     */
+
+  }, {
+    key: 'colorMode',
+    value: function colorMode() {
+      var effect = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 'smooth';
+      var time = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 1000;
+
+      var schema = _joi2.default.array().items(_joi2.default.any().required(), _joi2.default.string().allow('sudden', 'smooth').required(), _joi2.default.number().required());
+      return this.sendRequest('set_power', ['on', effect, time, 2], schema);
+    }
+
+    /**
+       * This method is used to set the smart LED directly to specified state. If +
+       * the smart LED is off, then it will turn on the smart LED firstly and
+       * then apply the specified command.
+       * @param {array} params can be "color", "hsv", "ct", "cf", "auto_dealy_off".
+       * <br>"color" means change the smart LED to specified color and brightness.
+       * <br>"hsv" means change the smart LED to specified color and brightness"
+       * <br>"ct" means change the smart LED to specified ct and brightness.
+       * <br>"cf" means start a color flow in specified fashion.
+       * <br>c"auto_delay_off" means turn on the smart LED to specified
+       * brightness and start a sleep timer to turn off the light after the specified minutes.
+     "val1", "val2", "val3" are class specific.
+       *
+       * @example
+       * setScene(['color', 65280, 70]);
+       * setScene(['hsv', 300, 70, 100]);
+       * setScene(['ct', 5400, 100]);
+       * setScene(['cf', 0, 0, '500,1,255,100,1000,1,16776960,70']);
+       *
+       * @returns {Promise} will be invoked after successfull or failed send
+       */
 
   }, {
     key: 'setScene',
     value: function setScene(params) {
       var schema = _joi2.default.array().items(_joi2.default.string().allow('color', 'hsv', 'ct', 'auto_delay_off').required(), _joi2.default.any().required(), _joi2.default.any().required(), _joi2.default.any());
       return this.sendRequest('set_scene', params, schema);
+    }
+
+    /**
+       * This method is used to set the smart LED directly to specified state. If +
+       * the smart LED is off, then it will turn on the smart LED firstly and
+       * then apply the specified command.
+       * @param {array} params can be "color", "hsv", "ct", "cf", "auto_dealy_off".
+       * <br>"color" means change the smart LED to specified color and brightness.
+       * <br>"hsv" means change the smart LED to specified color and brightness"
+       * <br>"ct" means change the smart LED to specified ct and brightness.
+       * <br>"cf" means start a color flow in specified fashion.
+       * <br>c"auto_delay_off" means turn on the smart LED to specified
+       * brightness and start a sleep timer to turn off the light after the specified minutes.
+     "val1", "val2", "val3" are class specific.
+       *
+       * @example
+       * setSceneBg(['color', 65280, 70]);
+       * setSceneBg(['hsv', 300, 70, 100]);
+       * setSceneBg(['ct', 5400, 100]);
+       * setSceneBg(['cf', 0, 0, '500,1,255,100,1000,1,16776960,70']);
+       *
+       * @returns {Promise} will be invoked after successfull or failed send
+       */
+
+  }, {
+    key: 'setSceneBg',
+    value: function setSceneBg(params) {
+      var schema = _joi2.default.array().items(_joi2.default.string().allow('color', 'hsv', 'ct', 'auto_delay_off').required(), _joi2.default.any().required(), _joi2.default.any().required(), _joi2.default.any());
+      return this.sendRequest('bg_set_scene', params, schema);
     }
 
     /**
@@ -521,6 +735,34 @@ var Yeelight = function (_EventEmitter) {
 
     /**
      * This method is used to change the color of a smart LED.
+     * @param {string} hex is the target color, whose type is integer.
+     * It should be expressed in hex 0xFFFFFF.
+     *
+     * @param {string} [effect='smooth']  Refer to 'setColorTemperature' method.
+     * @param {number} [time=1000] Refer to 'setColorTemperature' method.
+     *
+     * @example
+     * setRGBBg('#ffffff');
+     * setRGBBg('#ffffff', 'sudden');
+     * setRGBBg('#ffffff', 'smooth', 1000);
+     *
+     * @returns {Promise} will be invoked after successfull or failed send
+     */
+
+  }, {
+    key: 'setRGBBg',
+    value: function setRGBBg(hex) {
+      var effect = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 'smooth';
+      var time = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 1000;
+
+      var color = (0, _utils.hexToRgb)(hex);
+      var colorDec = color.red * 65536 + color.green * 256 + color.blue;
+      var schema = _joi2.default.array().items(_joi2.default.number().min(0).max(16777215).required(), _joi2.default.string().allow('sudden', 'smooth').required(), _joi2.default.number().required());
+      return this.sendRequest('bg_set_rgb', [colorDec, effect, time], schema);
+    }
+
+    /**
+     * This method is used to change the color of a smart LED.
      * @param {string} hue "hue" is the target hue value, whose type is integer.
      * It should be expressed in decimal integer ranges from 0 to 359.
      *
@@ -546,6 +788,35 @@ var Yeelight = function (_EventEmitter) {
 
       var schema = _joi2.default.array().items(_joi2.default.number().min(0).max(359).required(), _joi2.default.number().min(0).max(100).required(), _joi2.default.string().allow('sudden', 'smooth').required(), _joi2.default.number().required());
       return this.sendRequest('set_hsv', [hue, saturation, effect, time], schema);
+    }
+
+    /**
+     * This method is used to change the color of a smart LED.
+     * @param {string} hue "hue" is the target hue value, whose type is integer.
+     * It should be expressed in decimal integer ranges from 0 to 359.
+     *
+     * @param {string} saturation is the target saturation value whose type is integer.
+     * It's range is 0 to 100.
+     *
+     * @param {string} [effect='smooth']  Refer to 'setColorTemperature' method.
+     * @param {number} [time=1000] Refer to 'setColorTemperature' method.
+     *
+     * @example
+     * setHSVBg(100, 50);
+     * setHSVBg(100, 50, 'sudden');
+     * setHSVBg(100, 50, 'smooth', 1000);
+     *
+     * @returns {Promise} will be invoked after successfull or failed send
+     */
+
+  }, {
+    key: 'setHSVBg',
+    value: function setHSVBg(hue, saturation) {
+      var effect = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 'smooth';
+      var time = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : 100;
+
+      var schema = _joi2.default.array().items(_joi2.default.number().min(0).max(359).required(), _joi2.default.number().min(0).max(100).required(), _joi2.default.string().allow('sudden', 'smooth').required(), _joi2.default.number().required());
+      return this.sendRequest('bg_set_hsv', [hue, saturation, effect, time], schema);
     }
 
     /**
@@ -627,6 +898,32 @@ var Yeelight = function (_EventEmitter) {
     }
 
     /**
+     * This method is used to change brightness, CT or color of a smart LED
+     * without knowing the current value, it's main used by controllers.
+     * @param {string} action the direction of the adjustment. The valid value can be:
+     * <br>'increase': increase the specified property
+     * <br>'decrease': decrease the specified property
+     * <br>'circle': increase the specified property, after it reaches the max value, go back to minimum value
+     *
+     * @param {string} prop the property to adjust. The valid value can be:
+     * <br>'bright': adjust brightness.
+     * <br>'ct': adjust color temperature.
+     * <br>'color': adjust color. (When 'prop' is 'color', the 'action' can only be 'circle', otherwise, it will be deemed as invalid request.)
+     *
+     * @example
+     * setAdjustBg('increase', 'bright');
+     *
+     * @returns {Promise} will be invoked after successfull or failed send
+     */
+
+  }, {
+    key: 'setAdjustBg',
+    value: function setAdjustBg(action, prop) {
+      var schema = _joi2.default.array().items(_joi2.default.string().allow('increase', 'decrease', 'circle').required(), _joi2.default.string().allow('bright', 'ct', 'color').required());
+      return this.sendRequest('bg_set_adjust', [action, prop], schema);
+    }
+
+    /**
      * This method is used to start or stop music mode on a device. Under music mode,
      * no property will be reported and no message quota is checked.
      * @param {number} action the action of set_music command. The valid value can be:
@@ -674,6 +971,31 @@ var Yeelight = function (_EventEmitter) {
     }
 
     /**
+     * This method is used to start a color flow. Color flow is a series of smart
+     * LED visible state changing. It can be brightness changing,
+     * color changing or color temperature changing.
+     * @param {number} count is the total number of visible state changing
+     * before color flow stopped. 0 means infinite loop on the state changing.
+     * @param {string} action is the action taken after the flow is stopped.
+     * <br>0: means smart LED recover to the state before the color flow started.
+     * <br>1: means smart LED stay at the state when the flow is stopped.
+     * <br>2: means turn off the smart LED after the flow is stopped.
+     * @param {string} flowExpression is the expression of the state changing series.
+     *
+     * @example
+     * startColorFlowBg(4, 2, '1000, 2, 2700, 100, 500, 1, 255, 10, 500, 2, 5000, 1');
+     *
+     * @returns {Promise} will be invoked after successfull or failed send
+     */
+
+  }, {
+    key: 'startColorFlowBg',
+    value: function startColorFlowBg(count, action, flowExpression) {
+      var schema = _joi2.default.array().items(_joi2.default.number().required(), _joi2.default.number().allow(0, 1, 2).required(), _joi2.default.string().required());
+      return this.sendRequest('bg_start_cf', [action, action, flowExpression], schema);
+    }
+
+    /**
      * This method is used to stop a running color flow
      *
      * @example
@@ -686,6 +1008,21 @@ var Yeelight = function (_EventEmitter) {
     key: 'stopColorFlow',
     value: function stopColorFlow() {
       return this.sendRequest('stop_cf', []);
+    }
+
+    /**
+     * This method is used to stop a running color flow
+     *
+     * @example
+     * stopColorFlowBg();
+     *
+     * @returns {Promise} will be invoked after successfull or failed send
+     */
+
+  }, {
+    key: 'stopColorFlowBg',
+    value: function stopColorFlowBg() {
+      return this.sendRequest('bg_stop_cf', []);
     }
   }]);
 
