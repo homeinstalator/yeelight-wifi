@@ -39,7 +39,7 @@ export default class Yeelight extends EventEmitter {
       throw new Error(`${parsedUri.protocol} is not supported`);
     }
 
-    this.config = { refresh: 3*60 };
+    this.config = { refresh: 30 };
 
     this.id = data.ID;
     this.name = data.NAME;
@@ -116,6 +116,13 @@ export default class Yeelight extends EventEmitter {
    */
   refresh () {
     this.log(`Connection refresh on ${this.name} id ${this.id} on ${this.hostname}:${this.port}`);
+
+    if (( Date.now() - this.lastKnown ) > 2* this.config.refresh * 1000 +100){
+      this.status = YeelightStatus.OFFLINE;
+    }
+    else{
+      this.status = YeelightStatus.ONLINE;
+    }
     this.socket.setKeepAlive(true);
     this.socket.setTimeout(this.config.refresh*1000);
     this.getValues('power', 'bright', 'rgb', 'color_mode','ct');
@@ -153,7 +160,7 @@ export default class Yeelight extends EventEmitter {
         });
 
         // Avoid to send data on stale sockets
-        if ( this.status > YeelightStatus.OFFLINE ) {
+        if ( this.status >= YeelightStatus.OFFLINE ) {
           this.log(`sending req: ${req}`);
 
           this.socket.write(`${req}\r\n`, (err) => {
@@ -205,7 +212,7 @@ export default class Yeelight extends EventEmitter {
         this.emit('response', id, result);
       }
     } catch (ex) {
-      this.emit('error', ex);
+      this.emit('error', id, ex, resp);
     }
   }
 

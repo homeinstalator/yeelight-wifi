@@ -76,7 +76,7 @@ var Yeelight = function (_EventEmitter) {
       throw new Error(parsedUri.protocol + ' is not supported');
     }
 
-    _this.config = { refresh: 3 * 60 };
+    _this.config = { refresh: 30 };
 
     _this.id = data.ID;
     _this.name = data.NAME;
@@ -164,6 +164,12 @@ var Yeelight = function (_EventEmitter) {
     key: 'refresh',
     value: function refresh() {
       this.log('Connection refresh on ' + this.name + ' id ' + this.id + ' on ' + this.hostname + ':' + this.port);
+
+      if (Date.now() - this.lastKnown > 2 * this.config.refresh * 1000 + 100) {
+        this.status = YeelightStatus.OFFLINE;
+      } else {
+        this.status = YeelightStatus.ONLINE;
+      }
       this.socket.setKeepAlive(true);
       this.socket.setTimeout(this.config.refresh * 1000);
       this.getValues('power', 'bright', 'rgb', 'color_mode', 'ct');
@@ -206,7 +212,7 @@ var Yeelight = function (_EventEmitter) {
           });
 
           // Avoid to send data on stale sockets
-          if (_this2.status > YeelightStatus.OFFLINE) {
+          if (_this2.status >= YeelightStatus.OFFLINE) {
             _this2.log('sending req: ' + req);
 
             _this2.socket.write(req + '\r\n', function (err) {
@@ -239,10 +245,10 @@ var Yeelight = function (_EventEmitter) {
     value: function formatResponse(resp) {
       try {
         var json = JSON.parse(resp);
-        var id = json.id;
+        var _id = json.id;
         var result = json.result;
 
-        if (!id) {
+        if (!_id) {
           this.log('got response without id: ' + resp.toString().replace(/\r\n/, ''));
           this.emit('notifcation', json);
           return;
@@ -256,12 +262,12 @@ var Yeelight = function (_EventEmitter) {
         if (json && json.error) {
           var error = new Error(json.error.message);
           error.code = json.error.code;
-          this.emit('error', id, error);
+          this.emit('error', _id, error);
         } else {
-          this.emit('response', id, result);
+          this.emit('response', _id, result);
         }
       } catch (ex) {
-        this.emit('error', ex);
+        this.emit('error', id, ex, resp);
       }
     }
 
