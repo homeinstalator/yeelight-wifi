@@ -84,6 +84,7 @@ var Yeelight = function (_EventEmitter) {
     _this.port = parsedUri.port;
     _this.hostname = parsedUri.hostname;
     _this.supports = data.SUPPORT.split(' ');
+    if (_this.SUPPORT_OBJ) _this.supports = _this.SUPPORT_OBJ;
     _this.status = YeelightStatus.SSDP;
     _this.lastKnown = Date.now();
 

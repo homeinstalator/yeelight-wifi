@@ -47,6 +47,7 @@ export default class Yeelight extends EventEmitter {
     this.port = parsedUri.port;
     this.hostname = parsedUri.hostname;
     this.supports = data.SUPPORT.split(' ');
+    if(this.SUPPORT_OBJ) this.supports = this.SUPPORT_OBJ;
     this.status = YeelightStatus.SSDP;
     this.lastKnown = Date.now();
 

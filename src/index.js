@@ -25,7 +25,7 @@ class YeelightSearch extends EventEmitter {
     // Register devices that sends NOTIFY to multicast address too
     this.client.on('advertise-alive', data => this.addLight(data));
 
-    this.client.search('wifi_bulb');
+    //this.client.search('wifi_bulb');
   }
 
   /**
@@ -54,6 +54,24 @@ class YeelightSearch extends EventEmitter {
   getYeelights() {
     return this.yeelights;
   }
+    /**
+   * add a list of Yeelights
+   * @param {obj} lightarray array of Yeelights
+   */
+  addInitLights(lightarray){
+    let yeelight = new Yeelight({
+      'LOCATION': 'yeelight://'+lightarray.ip+':'+lightarray.port,
+      'ID': lightarray.id,
+      'SUPPORT': 'get_prop set_default set_power toggle set_bright start_cf stop_cf set_scene cron_add cron_get cron_del set_ct_abx set_rgb set_hsv set_adjust set_music set_name',
+      'NAME': 'Living Room',
+      'MODEL': lightarray.type,
+      'SUPPORT_OBJ': lightarray.supports
+    }); 
+    yeelight.init = true;
+    
+    this.yeelights.push(yeelight);
+    this.emit('found', yeelight);
+}
 
   /**
    * returns one Yeelight found by id
