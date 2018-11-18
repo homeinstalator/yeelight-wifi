@@ -76,7 +76,9 @@ var Yeelight = function (_EventEmitter) {
       throw new Error(parsedUri.protocol + ' is not supported');
     }
 
-    _this.config = { refresh: 30 };
+    _this.config = {
+      refresh: 30
+    };
 
     _this.id = data.ID;
     _this.name = data.NAME;
@@ -112,6 +114,10 @@ var Yeelight = function (_EventEmitter) {
       } else if (err.code == 'ECONNREFUSED') {
         _this.status = YeelightStatus.OFFLINE;
         _this.log('Connection refused on id ' + _this.id + ' ' + _this.hostname + ':' + _this.port + ' connection');
+      } else if (err.code == 'EHOSTUNREACH') {
+        // retry connect in x sec.
+        _this.status = YeelightStatus.OFFLINE;
+        setTimeout(_this.reconnect2.bind(_this), 20 * 1000);
       }
       _this.emit('error', _this.id, 'Connection ' + _this.hostname + ':' + _this.port, err);
     });
@@ -136,6 +142,17 @@ var Yeelight = function (_EventEmitter) {
       }
       this.port = this.parsedUri.port;
       this.hostname = this.parsedUri.hostname;
+      this.socket.connect(this.port, this.hostname, this.connect());
+    }
+
+    /**
+     * reconnect reconnects to the light, use it when lights first connection ist failed
+     *
+     */
+
+  }, {
+    key: 'reconnect2',
+    value: function reconnect2() {
       this.socket.connect(this.port, this.hostname, this.connect());
     }
 
