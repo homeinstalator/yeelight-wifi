@@ -263,10 +263,10 @@ var Yeelight = function (_EventEmitter) {
     value: function formatResponse(resp) {
       try {
         var json = JSON.parse(resp);
-        var _id = json.id;
+        var id = json.id;
         var result = json.result;
 
-        if (!_id) {
+        if (!id) {
           this.log('got response without id: ' + resp.toString().replace(/\r\n/, ''));
           this.emit('notifcation', json);
           return;
@@ -280,12 +280,12 @@ var Yeelight = function (_EventEmitter) {
         if (json && json.error) {
           var error = new Error(json.error.message);
           error.code = json.error.code;
-          this.emit('error', _id, error);
+          this.emit('error', id, error);
         } else {
-          this.emit('response', _id, result);
+          this.emit('response', id, result);
         }
       } catch (ex) {
-        this.emit('error', id, ex, resp);
+        this.emit('error', null, ex, resp);
       }
     }
 

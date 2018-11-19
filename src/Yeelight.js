@@ -228,7 +228,7 @@ export default class Yeelight extends EventEmitter {
         this.emit('response', id, result);
       }
     } catch (ex) {
-      this.emit('error', id, ex, resp);
+      this.emit('error', null , ex, resp);
     }
   }
 
