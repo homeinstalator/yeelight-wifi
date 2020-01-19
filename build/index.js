@@ -53,7 +53,7 @@ var YeelightSearch = function (_EventEmitter) {
       return _this.addLight(data);
     });
 
-    //this.client.search('wifi_bulb');
+    _this.client.search('wifi_bulb');
     return _this;
   }
 
@@ -91,27 +91,6 @@ var YeelightSearch = function (_EventEmitter) {
     key: 'getYeelights',
     value: function getYeelights() {
       return this.yeelights;
-    }
-    /**
-    * add a list of Yeelights
-    * @param {obj} lightarray array of Yeelights
-    */
-
-  }, {
-    key: 'addInitLights',
-    value: function addInitLights(lightarray) {
-      var yeelight = new _Yeelight2.default({
-        'LOCATION': 'yeelight://' + lightarray.ip + ':' + lightarray.port,
-        'ID': lightarray.id,
-        'SUPPORT': 'get_prop set_default set_power toggle set_bright start_cf stop_cf set_scene cron_add cron_get cron_del set_ct_abx set_rgb set_hsv set_adjust set_music set_name',
-        'NAME': 'Living Room',
-        'MODEL': lightarray.type,
-        'SUPPORT_OBJ': lightarray.supports
-      });
-      yeelight.init = true;
-
-      this.yeelights.push(yeelight);
-      this.emit('found', yeelight);
     }
 
     /**
